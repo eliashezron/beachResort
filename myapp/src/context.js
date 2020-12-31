@@ -1,8 +1,15 @@
 import React, { Component } from 'react'
-import items from './data'
+// import items from './data'
+import client from './Contentful'
+
+client.getEntries({
+    content_type: 'beachResort'
+})
+    .then((response)=> console.log(response.items))
+    
+
+
 const RoomContext = React.createContext()
-
-
 // <RoomContext.Provider value={'hey'}
 class RoomProvider extends Component {
     
@@ -22,9 +29,14 @@ class RoomProvider extends Component {
         pets:false,
     }
     // getData
-    
-    componentDidMount(){
-        let rooms = this.formatData(items)
+    getData = async()=>{
+        try{
+            let response = await client.getEntries({
+                content_type:'beachResort',
+                // order:'sys.createdAt'
+                order:'fields.price'
+            })
+        let rooms = this.formatData(response.items)
         let featuredRooms = rooms.filter(room => room.featured === true)
         let minPrice = Math.min(...rooms.map(item=>item.price))
         let maxPrice = Math.max(...rooms.map(item=> item.price))
@@ -42,6 +54,31 @@ class RoomProvider extends Component {
             minSize,
             maxSize,
         })
+        }catch (error){
+        console.log(error)
+    }
+    }
+    componentDidMount(){
+        this.getData()
+        // this.getData
+        // let rooms = this.formatData(items)
+        // let featuredRooms = rooms.filter(room => room.featured === true)
+        // let minPrice = Math.min(...rooms.map(item=>item.price))
+        // let maxPrice = Math.max(...rooms.map(item=> item.price))
+        // let maxSize = Math.max(...rooms.map(item=> item.size))
+        // let minSize = Math.min(...rooms.map(item=> item.size))
+        
+        // this.setState({
+        //     rooms, 
+        //     featuredRooms, 
+        //     sortedRooms:rooms, 
+        //     loading:false,
+        //     price:maxPrice,
+        //     minPrice,
+        //     maxPrice,
+        //     minSize,
+        //     maxSize,
+        // })
     }
     formatData(items){
         let tempItems = items.map(item=>{
@@ -77,8 +114,8 @@ class RoomProvider extends Component {
         type,
         capacity,
         price,
-        minPrice,
-        maxPrice,
+        // minPrice,
+        // maxPrice,
         minSize,
         maxSize,
         breakfast,
@@ -98,9 +135,9 @@ class RoomProvider extends Component {
             tempRooms=tempRooms.filter(room => room.capacity >= capacity)
         }
         // filter by price
-        if(price !== minPrice){
+        
             tempRooms=tempRooms.filter(room=> room.price <= price)
-        }
+        
         // filter by size
         tempRooms = tempRooms.filter(room=>room.size>=minSize && room.size<= maxSize)
         // filter by extras
